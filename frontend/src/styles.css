@@ -444,8 +444,28 @@ code {
   gap: 10px;
 }
 
+.chart-shell--interactive {
+  gap: 12px;
+}
+
 .chart-shell--detailed {
   gap: 14px;
+}
+
+.chart-canvas {
+  width: 100%;
+  height: 360px;
+  border-radius: 20px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 253, 248, 0.55)),
+    linear-gradient(180deg, rgba(23, 32, 42, 0.03), rgba(23, 32, 42, 0.01));
+}
+
+.chart-interaction-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
 }
 
 .chart-svg {
@@ -544,6 +564,79 @@ code {
   justify-content: space-between;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.trendchart-tooltip {
+  min-width: 188px;
+  border-radius: 18px;
+  border: 1px solid rgba(23, 32, 42, 0.08);
+  background: rgba(255, 253, 248, 0.96);
+  box-shadow: 0 16px 40px rgba(67, 53, 24, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.trendchart-tooltip__header {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(23, 32, 42, 0.06);
+  background: linear-gradient(180deg, rgba(63, 124, 255, 0.08), rgba(63, 124, 255, 0.02));
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.trendchart-tooltip__rows {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+.trendchart-tooltip__row,
+.trendchart-tooltip__meta,
+.trendchart-tooltip__value {
+  display: flex;
+  align-items: center;
+}
+
+.trendchart-tooltip__row {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trendchart-tooltip__meta {
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.trendchart-tooltip__value {
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.trendchart-tooltip__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--tooltip-swatch);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tooltip-swatch) 16%, transparent);
+}
+
+.trendchart-tooltip__delta {
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.trendchart-tooltip__delta--up {
+  color: var(--accent);
+}
+
+.trendchart-tooltip__delta--down {
+  color: var(--good);
 }
 
 .empty-inline,
@@ -691,6 +784,10 @@ code {
     aspect-ratio: 720 / 420;
   }
 
+  .chart-canvas {
+    height: 336px;
+  }
+
   .chart-preview {
     padding: 6px;
   }
@@ -742,5 +839,9 @@ code {
   .stat-panel,
   .store-card {
     border-radius: 20px;
+  }
+
+  .chart-canvas {
+    height: 300px;
   }
 }
