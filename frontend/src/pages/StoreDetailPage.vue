@@ -27,31 +27,31 @@
         <div class="queue-display-list">
           <div>
             <p class="muted-text">現場取號</p>
-            <code v-if="detail.latest_queue.store_queue.length">{{ detail.latest_queue.store_queue.join(", ") }}</code>
+            <code v-if="latestQueueDisplay.onsiteQueue.length">{{ latestQueueDisplay.onsiteQueue.join(", ") }}</code>
             <p v-else class="muted-text">目前沒有可用的現場號碼資料。</p>
           </div>
-          <div v-if="detail.latest_queue.reservation_queue.length">
+          <div v-if="latestQueueDisplay.reservationQueue.length">
             <p class="muted-text">手機預約</p>
-            <code>{{ detail.latest_queue.reservation_queue.join(", ") }}</code>
+            <code>{{ latestQueueDisplay.reservationQueue.join(", ") }}</code>
           </div>
         </div>
       </div>
       <div class="detail-summary">
         <div>
           <span>現場最小號碼</span>
-          <strong>{{ formatOptionalNumber(detail.latest_queue.queue_min) }}</strong>
+          <strong>{{ formatOptionalNumber(latestQueueDisplay.queueMin) }}</strong>
         </div>
         <div>
           <span>現場最大號碼</span>
-          <strong>{{ formatOptionalNumber(detail.latest_queue.queue_max) }}</strong>
+          <strong>{{ formatOptionalNumber(latestQueueDisplay.queueMax) }}</strong>
         </div>
         <div>
           <span>顯示數量</span>
-          <strong>{{ formatOptionalNumber(detail.latest_queue.queue_count) }}</strong>
+          <strong>{{ formatOptionalNumber(latestQueueDisplay.queueCount) }}</strong>
         </div>
         <div>
           <span>號碼跨度</span>
-          <strong>{{ formatOptionalNumber(detail.latest_queue.queue_span) }}</strong>
+          <strong>{{ formatOptionalNumber(latestQueueDisplay.queueSpan) }}</strong>
         </div>
       </div>
     </section>
@@ -61,7 +61,7 @@
         eyebrow="等候走勢"
         title="最近 6 小時等候組數"
         :headline="detailWaitHeadline"
-        description="以最近 6 小時的實際快照顯示等候組數變化。"
+        description="顯示最近 6 小時等候組數走勢；數值越高，代表現場等待壓力越大。"
         :labels="historyLabels"
         :series="[
           {
@@ -76,7 +76,7 @@
         eyebrow="候位密度"
         title="最近 6 小時候位組數"
         :headline="detailWaitingGroupHeadline"
-        description="對照主要等候欄位，補充觀察候位組數的波動。"
+        description="顯示最近 6 小時候位組數變化，可用來對照等候組數的變動節奏。"
         :labels="historyLabels"
         :series="[
           {
@@ -91,20 +91,20 @@
         eyebrow="號碼推進"
         title="最近 6 小時顯示號碼上限"
         :headline="detailQueueHeadline"
-        description="拆分現場取號與手機預約號碼，避免 8xxxx 預約號干擾現場推進觀察。"
+        description="綠線表示現場取號上限，紫線表示手機預約號上限，用來觀察兩種隊列的推進節奏。"
         :labels="historyLabels"
         :series="[
           {
             name: '現場取號',
             color: '#12a37d',
             fill: true,
-            values: history.points.map((point) => point.queue_max),
+            values: onsiteQueueHistoryValues,
           },
           {
             name: '手機預約',
             color: '#5b66f5',
             dashed: true,
-            values: history.points.map((point) => point.reservation_queue_max),
+            values: reservationQueueHistoryValues,
           },
         ]"
       />
@@ -177,6 +177,47 @@ const history = ref<StoreHistoryResponse | null>(null);
 const analytics = ref<StoreAnalyticsResponse | null>(null);
 const loading = ref(false);
 const errorMessage = ref("");
+const RESERVATION_QUEUE_THRESHOLD = 8000;
+
+const latestQueueDisplay = computed(() => {
+  const latestQueue = detail.value?.latest_queue;
+  if (!latestQueue) {
+    return {
+      onsiteQueue: [] as number[],
+      reservationQueue: [] as number[],
+      queueMin: null as number | null,
+      queueMax: null as number | null,
+      queueCount: null as number | null,
+      queueSpan: null as number | null,
+    };
+  }
+
+  const onsiteQueue = latestQueue.store_queue.filter((number) => number < RESERVATION_QUEUE_THRESHOLD);
+  const reservationQueue = latestQueue.reservation_queue.length
+    ? latestQueue.reservation_queue.filter((number) => number >= RESERVATION_QUEUE_THRESHOLD)
+    : latestQueue.store_queue.filter((number) => number >= RESERVATION_QUEUE_THRESHOLD);
+  const queueMin = onsiteQueue.length ? Math.min(...onsiteQueue) : null;
+  const queueMax = onsiteQueue.length ? Math.max(...onsiteQueue) : null;
+  const queueCount = onsiteQueue.length;
+  const queueSpan = queueMin !== null && queueMax !== null ? queueMax - queueMin : null;
+
+  return {
+    onsiteQueue,
+    reservationQueue,
+    queueMin,
+    queueMax,
+    queueCount,
+    queueSpan,
+  };
+});
+
+const onsiteQueueHistoryValues = computed(() =>
+  (history.value?.points || []).map((point) => getOnsiteQueueMax(point)),
+);
+
+const reservationQueueHistoryValues = computed(() =>
+  (history.value?.points || []).map((point) => getReservationQueueMax(point)),
+);
 
 const historyLabels = computed(() => {
   const points = history.value?.points || [];
@@ -194,9 +235,8 @@ const detailWaitingGroupHeadline = computed(() => {
 });
 
 const detailQueueHeadline = computed(() => {
-  const points = [...(history.value?.points || [])].reverse();
-  const latestOnsite = points.find((point) => point.queue_max !== null)?.queue_max;
-  const latestReservation = points.find((point) => point.reservation_queue_max !== null)?.reservation_queue_max;
+  const latestOnsite = [...onsiteQueueHistoryValues.value].reverse().find((value) => value !== null);
+  const latestReservation = [...reservationQueueHistoryValues.value].reverse().find((value) => value !== null);
 
   if (latestOnsite !== undefined && latestOnsite !== null && latestReservation !== undefined && latestReservation !== null) {
     return `現場 ${formatOptionalNumber(latestOnsite)} ・ 預約 ${formatOptionalNumber(latestReservation)}`;
@@ -209,6 +249,21 @@ const detailQueueHeadline = computed(() => {
   }
   return "暫無資料";
 });
+
+function getOnsiteQueueMax(point: StoreHistoryResponse["points"][number]) {
+  if (point.queue_max === null || point.queue_max === undefined) return null;
+  return point.queue_max >= RESERVATION_QUEUE_THRESHOLD ? null : point.queue_max;
+}
+
+function getReservationQueueMax(point: StoreHistoryResponse["points"][number]) {
+  if (point.reservation_queue_max !== null && point.reservation_queue_max !== undefined) {
+    return point.reservation_queue_max >= RESERVATION_QUEUE_THRESHOLD ? point.reservation_queue_max : null;
+  }
+  if (point.queue_max !== null && point.queue_max !== undefined && point.queue_max >= RESERVATION_QUEUE_THRESHOLD) {
+    return point.queue_max;
+  }
+  return null;
+}
 
 async function loadStore() {
   const storeId = Number(route.params.storeId);

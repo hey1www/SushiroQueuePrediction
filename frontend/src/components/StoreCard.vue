@@ -22,7 +22,7 @@
       </div>
       <div>
         <p>顯示號碼數</p>
-        <strong>{{ formatOptionalNumber(store.queue.queue_count) }}</strong>
+        <strong>{{ formatOptionalNumber(onsiteQueueCount) }}</strong>
       </div>
       <div>
         <p>預估等候</p>
@@ -32,8 +32,8 @@
 
     <div class="queue-strip">
       <span>目前顯示號碼</span>
-      <code v-if="store.queue.store_queue.length">
-        {{ store.queue.store_queue.join(", ") }}
+      <code v-if="onsiteQueue.length">
+        {{ onsiteQueue.join(", ") }}
       </code>
       <span v-else>暫無可用顯示號碼資料</span>
     </div>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { RouterLink } from "vue-router";
 
 import type { StoreCurrent } from "../types/api";
@@ -63,7 +64,12 @@ import {
 } from "../utils/format";
 import StatusBadge from "./StatusBadge.vue";
 
-defineProps<{
+const props = defineProps<{
   store: StoreCurrent;
 }>();
+
+const RESERVATION_QUEUE_THRESHOLD = 8000;
+
+const onsiteQueue = computed(() => props.store.queue.store_queue.filter((number) => number < RESERVATION_QUEUE_THRESHOLD));
+const onsiteQueueCount = computed(() => onsiteQueue.value.length);
 </script>
