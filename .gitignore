@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.venv
+__pycache__/
+*.pyc
+*.sqlite3
+*.db
+node_modules/
+dist/
+coverage/
+backend/.env
+backend/.venv/
+backend/data/*.db
+frontend/.env
+infra/cloudflare/*.json
