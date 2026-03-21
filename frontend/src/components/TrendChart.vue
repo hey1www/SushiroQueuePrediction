@@ -18,7 +18,7 @@
     </div>
 
     <div v-if="hasValues" class="chart-shell chart-shell--detailed">
-      <svg viewBox="0 0 720 320" preserveAspectRatio="none" class="chart-svg chart-svg--detailed">
+      <svg viewBox="0 0 720 320" preserveAspectRatio="xMidYMid meet" class="chart-svg chart-svg--detailed">
         <defs>
           <linearGradient
             v-for="series in renderedSeries"
@@ -91,7 +91,7 @@
       </svg>
 
       <div class="chart-preview">
-        <svg viewBox="0 0 720 72" preserveAspectRatio="none" class="chart-preview__svg">
+        <svg viewBox="0 0 720 72" preserveAspectRatio="xMidYMid meet" class="chart-preview__svg">
           <g v-for="series in renderedSeries" :key="`${series.name}-preview`">
             <path
               v-for="(areaPath, index) in series.previewAreaPaths"

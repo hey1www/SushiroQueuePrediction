@@ -4,9 +4,6 @@
       <div>
         <p class="eyebrow">即時總覽</p>
         <h2>全港門店即時看板</h2>
-        <p class="hero-text">
-          所有資料均來自自建後端 API，優先呈現目前等候組數、顯示號碼與可解釋的預估等候時間。
-        </p>
       </div>
       <div class="hero-actions">
         <button class="button-link button-link--solid" @click="loadDashboard">立即更新</button>
