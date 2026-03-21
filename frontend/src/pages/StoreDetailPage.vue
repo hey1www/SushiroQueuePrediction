@@ -87,27 +87,38 @@
           },
         ]"
       />
-      <TrendChart
-        eyebrow="號碼推進"
-        title="最近 6 小時顯示號碼上限"
-        :headline="detailQueueHeadline"
-        description="綠線表示現場取號上限，紫線表示手機預約號上限，用來觀察兩種隊列的推進節奏。"
-        :labels="historyLabels"
-        :series="[
-          {
-            name: '現場取號',
-            color: '#12a37d',
-            fill: true,
-            values: onsiteQueueHistoryValues,
-          },
-          {
-            name: '手機預約',
-            color: '#5b66f5',
-            dashed: true,
-            values: reservationQueueHistoryValues,
-          },
-        ]"
-      />
+      <div class="dual-grid">
+        <TrendChart
+          eyebrow="號碼推進"
+          title="最近 6 小時現場顯示號碼上限"
+          :headline="detailOnsiteQueueHeadline"
+          description="顯示現場取號上限的變化，用來觀察現場隊列的推進速度。"
+          :labels="historyLabels"
+          :series="[
+            {
+              name: '現場取號',
+              color: '#12a37d',
+              fill: true,
+              values: onsiteQueueHistoryValues,
+            },
+          ]"
+        />
+        <TrendChart
+          eyebrow="預約進度"
+          title="最近 6 小時手機預約號上限"
+          :headline="detailReservationQueueHeadline"
+          description="顯示手機預約號上限的變化，用來觀察預約隊列的推進節奏。"
+          :labels="historyLabels"
+          :series="[
+            {
+              name: '手機預約',
+              color: '#5b66f5',
+              fill: true,
+              values: reservationQueueHistoryValues,
+            },
+          ]"
+        />
+      </div>
     </section>
 
     <section class="panel" v-if="analytics">
@@ -234,18 +245,18 @@ const detailWaitingGroupHeadline = computed(() => {
   return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
 });
 
-const detailQueueHeadline = computed(() => {
+const detailOnsiteQueueHeadline = computed(() => {
   const latestOnsite = [...onsiteQueueHistoryValues.value].reverse().find((value) => value !== null);
-  const latestReservation = [...reservationQueueHistoryValues.value].reverse().find((value) => value !== null);
-
-  if (latestOnsite !== undefined && latestOnsite !== null && latestReservation !== undefined && latestReservation !== null) {
-    return `現場 ${formatOptionalNumber(latestOnsite)} ・ 預約 ${formatOptionalNumber(latestReservation)}`;
-  }
   if (latestOnsite !== undefined && latestOnsite !== null) {
-    return `現場 ${formatOptionalNumber(latestOnsite)}`;
+    return `最新 ${formatOptionalNumber(latestOnsite)}`;
   }
+  return "暫無資料";
+});
+
+const detailReservationQueueHeadline = computed(() => {
+  const latestReservation = [...reservationQueueHistoryValues.value].reverse().find((value) => value !== null);
   if (latestReservation !== undefined && latestReservation !== null) {
-    return `預約 ${formatOptionalNumber(latestReservation)}`;
+    return `最新 ${formatOptionalNumber(latestReservation)}`;
   }
   return "暫無資料";
 });
