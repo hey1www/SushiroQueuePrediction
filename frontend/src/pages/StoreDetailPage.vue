@@ -59,41 +59,50 @@
     <section class="chart-grid" v-if="history">
       <TrendChart
         eyebrow="等候走勢"
-        title="最近 6 小時等候組數"
+        title="當天等候組數"
         :headline="detailWaitHeadline"
-        description="顯示最近 6 小時等候組數走勢；數值越高，代表現場等待壓力越大。"
-        :labels="historyLabels"
+        description="顯示當天 10:00 至 23:00 的等候組數走勢；數值越高，代表現場等待壓力越大。"
+        :labels="historyTimeline"
+        x-axis-type="time"
+        :x-min="chartRange.start"
+        :x-max="chartRange.end"
         :series="[
           {
             name: '等候組數',
             color: '#e85d3f',
             fill: true,
-            values: history.points.map((point) => point.wait),
+            values: waitHistoryValues,
           },
         ]"
       />
       <TrendChart
         eyebrow="候位密度"
-        title="最近 6 小時候位組數"
+        title="當天候位組數"
         :headline="detailWaitingGroupHeadline"
-        description="顯示最近 6 小時候位組數變化，可用來對照等候組數的變動節奏。"
-        :labels="historyLabels"
+        description="顯示當天 10:00 至 23:00 的候位組數變化，可用來對照等候節奏。"
+        :labels="historyTimeline"
+        x-axis-type="time"
+        :x-min="chartRange.start"
+        :x-max="chartRange.end"
         :series="[
           {
             name: '候位組數',
             color: '#3f7cff',
             fill: true,
-            values: history.points.map((point) => point.waiting_group),
+            values: waitingGroupHistoryValues,
           },
         ]"
       />
       <div class="dual-grid">
         <TrendChart
           eyebrow="號碼推進"
-          title="最近 6 小時現場顯示號碼上限"
+          title="當天現場顯示號碼上限"
           :headline="detailOnsiteQueueHeadline"
-          description="顯示現場取號上限的變化，用來觀察現場隊列的推進速度。"
-          :labels="historyLabels"
+          description="顯示當天 10:00 至 23:00 的現場取號上限，用來觀察現場隊列推進。"
+          :labels="historyTimeline"
+          x-axis-type="time"
+          :x-min="chartRange.start"
+          :x-max="chartRange.end"
           :series="[
             {
               name: '現場取號',
@@ -105,10 +114,13 @@
         />
         <TrendChart
           eyebrow="預約進度"
-          title="最近 6 小時手機預約號上限"
+          title="當天手機預約號上限"
           :headline="detailReservationQueueHeadline"
-          description="顯示手機預約號上限的變化，用來觀察預約隊列的推進節奏。"
-          :labels="historyLabels"
+          description="顯示當天 10:00 至 23:00 的手機預約號上限；展示值已去掉開頭的 8。"
+          :labels="historyTimeline"
+          x-axis-type="time"
+          :x-min="chartRange.start"
+          :x-max="chartRange.end"
           :series="[
             {
               name: '手機預約',
@@ -179,7 +191,6 @@ import {
   formatEtaReason,
   formatOptionalNumber,
   formatRegionArea,
-  formatTime,
 } from "../utils/format";
 
 const route = useRoute();
@@ -189,6 +200,12 @@ const analytics = ref<StoreAnalyticsResponse | null>(null);
 const loading = ref(false);
 const errorMessage = ref("");
 const RESERVATION_QUEUE_THRESHOLD = 8000;
+const HK_DATE_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Hong_Kong",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
 
 const latestQueueDisplay = computed(() => {
   const latestQueue = detail.value?.latest_queue;
@@ -214,7 +231,7 @@ const latestQueueDisplay = computed(() => {
 
   return {
     onsiteQueue,
-    reservationQueue,
+    reservationQueue: reservationQueue.map((number) => normalizeReservationNumber(number)),
     queueMin,
     queueMax,
     queueCount,
@@ -222,26 +239,44 @@ const latestQueueDisplay = computed(() => {
   };
 });
 
+const chartDateKey = computed(() => {
+  const latestTimestamp = [...(history.value?.points || [])].reverse().find((point) => point.timestamp)?.timestamp;
+  return getHongKongDateKey(detail.value?.data_updated_at || latestTimestamp || new Date().toISOString());
+});
+
+const chartRange = computed(() => ({
+  start: `${chartDateKey.value}T10:00:00+08:00`,
+  end: `${chartDateKey.value}T23:00:00+08:00`,
+}));
+
+const dayHistoryPoints = computed(() => {
+  const startMs = Date.parse(chartRange.value.start);
+  const endMs = Date.parse(chartRange.value.end);
+
+  return (history.value?.points || []).filter((point) => {
+    const pointMs = Date.parse(point.timestamp);
+    return Number.isFinite(pointMs) && pointMs >= startMs && pointMs <= endMs;
+  });
+});
+
+const historyTimeline = computed(() => dayHistoryPoints.value.map((point) => point.timestamp));
+const waitHistoryValues = computed(() => dayHistoryPoints.value.map((point) => point.wait));
+const waitingGroupHistoryValues = computed(() => dayHistoryPoints.value.map((point) => point.waiting_group));
 const onsiteQueueHistoryValues = computed(() =>
-  (history.value?.points || []).map((point) => getOnsiteQueueMax(point)),
+  dayHistoryPoints.value.map((point) => getOnsiteQueueMax(point)),
 );
 
 const reservationQueueHistoryValues = computed(() =>
-  (history.value?.points || []).map((point) => getReservationQueueMax(point)),
+  dayHistoryPoints.value.map((point) => getReservationQueueDisplayMax(point)),
 );
 
-const historyLabels = computed(() => {
-  const points = history.value?.points || [];
-  return points.map((point) => formatTime(point.timestamp));
-});
-
 const detailWaitHeadline = computed(() => {
-  const latest = [...(history.value?.points || [])].reverse().find((point) => point.wait !== null)?.wait;
+  const latest = [...dayHistoryPoints.value].reverse().find((point) => point.wait !== null)?.wait;
   return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
 });
 
 const detailWaitingGroupHeadline = computed(() => {
-  const latest = [...(history.value?.points || [])].reverse().find((point) => point.waiting_group !== null)?.waiting_group;
+  const latest = [...dayHistoryPoints.value].reverse().find((point) => point.waiting_group !== null)?.waiting_group;
   return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
 });
 
@@ -276,6 +311,24 @@ function getReservationQueueMax(point: StoreHistoryResponse["points"][number]) {
   return null;
 }
 
+function getReservationQueueDisplayMax(point: StoreHistoryResponse["points"][number]) {
+  return normalizeReservationNumber(getReservationQueueMax(point));
+}
+
+function normalizeReservationNumber(value: number | null | undefined) {
+  if (value === null || value === undefined) return null;
+  if (value >= RESERVATION_QUEUE_THRESHOLD) return value - RESERVATION_QUEUE_THRESHOLD;
+  return value;
+}
+
+function getHongKongDateKey(value: string) {
+  const parts = HK_DATE_FORMATTER.formatToParts(new Date(value));
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "01";
+  const day = parts.find((part) => part.type === "day")?.value ?? "01";
+  return `${year}-${month}-${day}`;
+}
+
 async function loadStore() {
   const storeId = Number(route.params.storeId);
   if (!storeId) {
@@ -289,7 +342,7 @@ async function loadStore() {
   try {
     const [detailResponse, historyResponse, analyticsResponse] = await Promise.all([
       fetchStoreDetail(storeId),
-      fetchStoreHistory(storeId, 6),
+      fetchStoreHistory(storeId, 24),
       fetchStoreAnalytics(storeId),
     ]);
     detail.value = detailResponse;

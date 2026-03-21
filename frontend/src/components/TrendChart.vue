@@ -55,7 +55,7 @@ import {
 } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 
-import { formatNumber } from "../utils/format";
+import { formatNumber, formatTime } from "../utils/format";
 
 use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, AxisPointerComponent, CanvasRenderer]);
 
@@ -89,12 +89,18 @@ const props = withDefaults(
     description?: string;
     headline?: string;
     emptyText?: string;
+    xAxisType?: "category" | "time";
+    xMin?: string;
+    xMax?: string;
   }>(),
   {
     eyebrow: "趨勢圖",
     description: "",
     headline: "",
     emptyText: "暫無足夠歷史資料",
+    xAxisType: "category",
+    xMin: "",
+    xMax: "",
   },
 );
 
@@ -107,6 +113,7 @@ const visibleSeries = computed(() =>
   props.series.filter((series) => series.values.some((value) => value !== null)),
 );
 
+const isTimeAxis = computed(() => props.xAxisType === "time");
 const legendItems = computed(() => visibleSeries.value);
 
 const hasValues = computed(
@@ -117,7 +124,9 @@ const hasValues = computed(
     ),
 );
 
-const chartGroup = computed(() => `trend-chart-${hashString(props.labels.join("|"))}`);
+const chartGroup = computed(() =>
+  `trend-chart-${hashString([props.xAxisType, props.xMin, props.xMax, props.labels.join("|")].join("|"))}`,
+);
 const showZoomSlider = computed(() => props.labels.length > 10);
 const axisLabelInterval = computed(() => getAxisLabelInterval(props.labels.length));
 
@@ -243,31 +252,58 @@ function buildOption(): TrendChartOption {
       extraCssText: "box-shadow:none;",
       formatter: (rawParams) => formatTooltip(rawParams),
     },
-    xAxis: {
-      type: "category",
-      boundaryGap: false,
-      data: props.labels,
-      axisLine: {
-        lineStyle: {
-          color: "rgba(23, 32, 42, 0.08)",
+    xAxis: isTimeAxis.value
+      ? {
+          type: "time",
+          min: props.xMin || undefined,
+          max: props.xMax || undefined,
+          axisLine: {
+            lineStyle: {
+              color: "rgba(23, 32, 42, 0.08)",
+            },
+          },
+          axisTick: {
+            show: false,
+          },
+          axisLabel: {
+            color: "#5e6872",
+            fontSize: 11,
+            hideOverlap: true,
+            margin: 14,
+            formatter: (value: number) => formatAxisTime(value),
+          },
+          axisPointer: {
+            label: {
+              formatter: (params) => formatAxisTime(params.value),
+            },
+          },
+          splitNumber: 8,
+        }
+      : {
+          type: "category",
+          boundaryGap: false,
+          data: props.labels,
+          axisLine: {
+            lineStyle: {
+              color: "rgba(23, 32, 42, 0.08)",
+            },
+          },
+          axisTick: {
+            show: false,
+          },
+          axisLabel: {
+            color: "#5e6872",
+            fontSize: 11,
+            hideOverlap: true,
+            interval: axisLabelInterval.value,
+            margin: 14,
+          },
+          axisPointer: {
+            label: {
+              formatter: (params) => String(params.value),
+            },
+          },
         },
-      },
-      axisTick: {
-        show: false,
-      },
-      axisLabel: {
-        color: "#5e6872",
-        fontSize: 11,
-        hideOverlap: true,
-        interval: axisLabelInterval.value,
-        margin: 14,
-      },
-      axisPointer: {
-        label: {
-          formatter: (params) => String(params.value),
-        },
-      },
-    },
     yAxis: {
       type: "value",
       scale: true,
@@ -353,6 +389,9 @@ function buildOption(): TrendChartOption {
 function buildSeriesOption(series: ChartSeriesInput): LineSeriesOption {
   const latestIndex = findLatestIndex(series.values);
   const latestValue = latestIndex === -1 ? null : series.values[latestIndex];
+  const data = isTimeAxis.value
+    ? props.labels.map((label, index) => [label, series.values[index]] as [string, number | null])
+    : series.values;
 
   return {
     name: series.name,
@@ -362,7 +401,7 @@ function buildSeriesOption(series: ChartSeriesInput): LineSeriesOption {
     showSymbol: false,
     symbol: "circle",
     symbolSize: 7,
-    data: series.values,
+    data,
     lineStyle: {
       color: series.color,
       width: 3,
@@ -433,7 +472,8 @@ function formatTooltip(rawParams: unknown) {
   if (!first) return "";
 
   const dataIndex = first.dataIndex;
-  const label = first.axisValueLabel || first.axisValue || props.labels[dataIndex] || "--";
+  const rawLabel = first.axisValue || props.labels[dataIndex] || "--";
+  const label = isTimeAxis.value ? formatAxisTime(rawLabel) : String(first.axisValueLabel || rawLabel || "--");
 
   const rows = visibleSeries.value.map((series) => {
     const value = series.values[dataIndex];
@@ -515,6 +555,13 @@ function formatMetric(value: number) {
 function formatDelta(value: number) {
   const sign = value > 0 ? "+" : value < 0 ? "−" : "±";
   return `${sign}${formatMetric(Math.abs(value))}`;
+}
+
+function formatAxisTime(value: string | number | Date | undefined) {
+  if (value === undefined || value === null || value === "") return "--:--";
+  const date = value instanceof Date ? value : typeof value === "number" ? new Date(value) : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return "--:--";
+  return formatTime(date.toISOString());
 }
 
 function withAlpha(color: string, alpha: number) {
