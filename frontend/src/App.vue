@@ -1,8 +1,9 @@
 <template>
   <div class="app-shell">
     <header class="topbar">
-      <div>
-        <h1>朗來了 —— 香港壽司郎排隊助手</h1>
+      <div class="topbar__title-stack">
+        <h1>朗來了</h1>
+        <p class="topbar__subtitle">—— 香港壽司郎排隊助手</p>
       </div>
       <nav class="topnav">
         <RouterLink to="/">即時看板</RouterLink>

@@ -63,6 +63,12 @@ input {
   min-width: 0;
 }
 
+.topbar__title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .topbar h1,
 .hero-card h2,
 .chart-card h3,
@@ -77,6 +83,13 @@ input {
 .topbar h1 {
   max-width: 16ch;
   font-size: clamp(1.45rem, 2.3vw, 2.45rem);
+}
+
+.topbar__subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.4;
 }
 
 .topnav {
@@ -271,10 +284,8 @@ select {
   max-width: 100%;
   font-size: clamp(1.85rem, 2vw, 2.2rem);
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: block;
+  overflow: visible;
 }
 
 .store-card__head,
@@ -293,6 +304,18 @@ select {
   flex-wrap: wrap;
 }
 
+.store-card__head {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.store-card__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
 .status-badge,
 .soft-tag {
   display: inline-flex;
@@ -301,6 +324,10 @@ select {
   padding: 7px 10px;
   font-size: 0.86rem;
   border: 1px solid transparent;
+}
+
+.status-badge {
+  border-radius: 12px;
 }
 
 .status-badge[data-tone="good"],
@@ -371,7 +398,7 @@ code {
 }
 
 .chart-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .chart-card {
@@ -659,6 +686,11 @@ code {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 20px;
+}
+
+.queue-display-list {
+  display: grid;
+  gap: 14px;
 }
 
 .tag-groups {

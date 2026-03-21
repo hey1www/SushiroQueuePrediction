@@ -99,6 +99,7 @@ export interface HistoryPoint {
   waiting_group: number | null;
   queue_max: number | null;
   queue_min: number | null;
+  reservation_queue_max: number | null;
 }
 
 export interface StoreHistoryResponse {

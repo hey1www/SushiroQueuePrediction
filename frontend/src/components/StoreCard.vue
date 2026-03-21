@@ -1,13 +1,13 @@
 <template>
   <article class="store-card">
     <div class="store-card__head">
-      <div>
+      <div class="store-card__title-block">
         <p class="eyebrow">{{ formatRegionArea(store.region, store.area) }}</p>
         <h3>{{ store.name }}</h3>
-      </div>
-      <div class="store-card__badges">
-        <StatusBadge :label="formatStoreStatus(store.store_status)" :tone="statusTone(store.store_status)" />
-        <StatusBadge :label="formatLocalTicketingStatus(store.local_ticketing_status)" :tone="statusTone(store.local_ticketing_status)" />
+        <div class="store-card__badges">
+          <StatusBadge :label="formatStoreStatus(store.store_status)" :tone="statusTone(store.store_status)" />
+          <StatusBadge :label="formatLocalTicketingStatus(store.local_ticketing_status)" :tone="statusTone(store.local_ticketing_status)" />
+        </div>
       </div>
     </div>
 

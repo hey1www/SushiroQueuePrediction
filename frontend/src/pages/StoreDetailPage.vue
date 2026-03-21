@@ -24,16 +24,25 @@
       <div>
         <p class="eyebrow">顯示號碼</p>
         <h3>最新顯示號碼</h3>
-        <code v-if="detail.latest_queue.store_queue.length">{{ detail.latest_queue.store_queue.join(", ") }}</code>
-        <p v-else class="muted-text">目前沒有可用的顯示號碼資料。</p>
+        <div class="queue-display-list">
+          <div>
+            <p class="muted-text">現場取號</p>
+            <code v-if="detail.latest_queue.store_queue.length">{{ detail.latest_queue.store_queue.join(", ") }}</code>
+            <p v-else class="muted-text">目前沒有可用的現場號碼資料。</p>
+          </div>
+          <div v-if="detail.latest_queue.reservation_queue.length">
+            <p class="muted-text">手機預約</p>
+            <code>{{ detail.latest_queue.reservation_queue.join(", ") }}</code>
+          </div>
+        </div>
       </div>
       <div class="detail-summary">
         <div>
-          <span>最小號碼</span>
+          <span>現場最小號碼</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_min) }}</strong>
         </div>
         <div>
-          <span>最大號碼</span>
+          <span>現場最大號碼</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_max) }}</strong>
         </div>
         <div>
@@ -82,14 +91,20 @@
         eyebrow="號碼推進"
         title="最近 6 小時顯示號碼上限"
         :headline="detailQueueHeadline"
-        description="以顯示號碼上限觀察整體推進節奏。"
+        description="拆分現場取號與手機預約號碼，避免 8xxxx 預約號干擾現場推進觀察。"
         :labels="historyLabels"
         :series="[
           {
-            name: '顯示號碼上限',
+            name: '現場取號',
             color: '#12a37d',
             fill: true,
             values: history.points.map((point) => point.queue_max),
+          },
+          {
+            name: '手機預約',
+            color: '#5b66f5',
+            dashed: true,
+            values: history.points.map((point) => point.reservation_queue_max),
           },
         ]"
       />
@@ -179,8 +194,20 @@ const detailWaitingGroupHeadline = computed(() => {
 });
 
 const detailQueueHeadline = computed(() => {
-  const latest = [...(history.value?.points || [])].reverse().find((point) => point.queue_max !== null)?.queue_max;
-  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest)}`;
+  const points = [...(history.value?.points || [])].reverse();
+  const latestOnsite = points.find((point) => point.queue_max !== null)?.queue_max;
+  const latestReservation = points.find((point) => point.reservation_queue_max !== null)?.reservation_queue_max;
+
+  if (latestOnsite !== undefined && latestOnsite !== null && latestReservation !== undefined && latestReservation !== null) {
+    return `現場 ${formatOptionalNumber(latestOnsite)} ・ 預約 ${formatOptionalNumber(latestReservation)}`;
+  }
+  if (latestOnsite !== undefined && latestOnsite !== null) {
+    return `現場 ${formatOptionalNumber(latestOnsite)}`;
+  }
+  if (latestReservation !== undefined && latestReservation !== null) {
+    return `預約 ${formatOptionalNumber(latestReservation)}`;
+  }
+  return "暫無資料";
 });
 
 async function loadStore() {
