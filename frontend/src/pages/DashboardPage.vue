@@ -2,68 +2,68 @@
   <section class="page-stack">
     <section class="hero-card">
       <div>
-        <p class="eyebrow">Real-time Overview</p>
-        <h2>全港门店实时看板</h2>
+        <p class="eyebrow">即時總覽</p>
+        <h2>全港門店即時看板</h2>
         <p class="hero-text">
-          所有数据只来自自建后端 API。页面会优先展示当前 wait、显示号码集合和可解释 ETA。
+          所有資料均來自自建後端 API，優先呈現目前等候組數、顯示號碼與可解釋的預估等候時間。
         </p>
       </div>
       <div class="hero-actions">
-        <button class="button-link button-link--solid" @click="loadDashboard">立即刷新</button>
-        <RouterLink class="button-link" to="/analytics">查看分析页</RouterLink>
+        <button class="button-link button-link--solid" @click="loadDashboard">立即更新</button>
+        <RouterLink class="button-link" to="/analytics">查看分析</RouterLink>
       </div>
     </section>
 
     <section class="stats-row">
-      <StatPanel label="门店数量" :value="String(response?.stores.length || 0)" hint="当前返回的门店总数" />
-      <StatPanel label="营业中" :value="String(openStoreCount)" hint="storeStatus = OPEN" />
-      <StatPanel label="最低 ETA" :value="lowestEtaLabel" hint="基于当前可估算门店" />
-      <StatPanel label="数据更新时间" :value="formatDateTime(response?.data_updated_at)" hint="Asia/Hong_Kong" />
+      <StatPanel label="門店數量" :value="String(response?.stores.length || 0)" hint="目前回傳的門店總數" />
+      <StatPanel label="營業中" :value="String(openStoreCount)" hint="目前仍在營業的門店" />
+      <StatPanel label="最快預估" :value="lowestEtaLabel" hint="以可估算門店為準" />
+      <StatPanel label="更新時間" :value="formatDateTime(response?.data_updated_at)" hint="香港時間" />
     </section>
 
     <section v-if="topRecommendation" class="recommend-card">
       <div>
-        <p class="eyebrow">Fastest Pick</p>
+        <p class="eyebrow">快速建議</p>
         <h3>{{ topRecommendation.name }}</h3>
       </div>
       <div class="recommend-card__meta">
-        <span>{{ topRecommendation.region }} / {{ topRecommendation.area }}</span>
-        <span>wait {{ formatOptionalNumber(topRecommendation.wait) }}</span>
-        <span>ETA {{ formatOptionalNumber(topRecommendation.eta_minutes, " 分钟") }}</span>
+        <span>{{ formatRegionArea(topRecommendation.region, topRecommendation.area) }}</span>
+        <span>等候 {{ formatOptionalNumber(topRecommendation.wait) }} 組</span>
+        <span>預估 {{ formatOptionalNumber(topRecommendation.eta_minutes, ' 分鐘') }}</span>
       </div>
-      <p>{{ topRecommendation.reason }}</p>
+      <p>{{ formatRecommendationReason(topRecommendation.reason) }}</p>
     </section>
 
     <section class="panel">
       <div class="filter-row">
         <label>
-          <span>区域</span>
+          <span>區域</span>
           <select v-model="filters.region">
             <option value="">全部</option>
             <option v-for="region in regions" :key="region" :value="region">{{ region }}</option>
           </select>
         </label>
         <label>
-          <span>排序</span>
+          <span>排序方式</span>
           <select v-model="filters.sort">
-            <option value="eta">按 ETA</option>
-            <option value="wait">按 wait</option>
-            <option value="name">按名称</option>
+            <option value="eta">按預估等候</option>
+            <option value="wait">按等候組數</option>
+            <option value="name">按門店名稱</option>
           </select>
         </label>
         <label class="checkbox-field">
           <input v-model="filters.openOnly" type="checkbox" />
-          <span>只看营业中</span>
+          <span>只看營業中</span>
         </label>
         <label class="checkbox-field">
           <input v-model="filters.localTicketOnly" type="checkbox" />
-          <span>只看可现场派筹</span>
+          <span>只看可現場派籌</span>
         </label>
       </div>
     </section>
 
     <p v-if="errorMessage" class="error-banner">{{ errorMessage }}</p>
-    <p v-if="loading" class="muted-text">正在加载门店数据…</p>
+    <p v-if="loading" class="muted-text">正在載入門店資料…</p>
 
     <section class="store-grid" v-if="response">
       <StoreCard v-for="store in response.stores" :key="store.id" :store="store" />
@@ -80,7 +80,7 @@ import StatPanel from "../components/StatPanel.vue";
 import StoreCard from "../components/StoreCard.vue";
 import { useDashboardFilters } from "../stores/useFilters";
 import type { RecommendationsResponse, StoresCurrentResponse } from "../types/api";
-import { formatDateTime, formatOptionalNumber } from "../utils/format";
+import { formatDateTime, formatOptionalNumber, formatRecommendationReason, formatRegionArea } from "../utils/format";
 
 const filters = useDashboardFilters();
 const response = ref<StoresCurrentResponse | null>(null);
@@ -98,8 +98,8 @@ const lowestEtaLabel = computed(() => {
   const etaValues = response.value?.stores
     .map((store) => store.eta.estimated_wait_minutes)
     .filter((value): value is number => value !== null);
-  if (!etaValues?.length) return "--";
-  return `${Math.min(...etaValues)} 分钟`;
+  if (!etaValues?.length) return "暫無估算";
+  return `${Math.min(...etaValues)} 分鐘`;
 });
 
 const topRecommendation = computed(() => recommendations.value?.recommendations[0] || null);
@@ -130,7 +130,7 @@ async function loadDashboard() {
       regions.value = [...new Set(allStores.stores.map((store) => store.region).filter(Boolean) as string[])];
     }
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "加载失败";
+    errorMessage.value = error instanceof Error ? error.message : "載入失敗";
   } finally {
     loading.value = false;
   }

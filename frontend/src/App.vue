@@ -2,12 +2,12 @@
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <p class="eyebrow">Hong Kong Queue Assistant v1</p>
-        <h1>寿司郎香港排队助手</h1>
+        <p class="eyebrow">香港壽司郎排隊助手 V1</p>
+        <h1>壽司郎香港排隊助手</h1>
       </div>
       <nav class="topnav">
-        <RouterLink to="/">实时看板</RouterLink>
-        <RouterLink to="/analytics">分析页</RouterLink>
+        <RouterLink to="/">即時看板</RouterLink>
+        <RouterLink to="/analytics">分析頁</RouterLink>
       </nav>
     </header>
     <main class="page-frame">

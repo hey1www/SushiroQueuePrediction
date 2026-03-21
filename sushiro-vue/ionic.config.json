@@ -1,7 +1,0 @@
-{
-  "name": "sushiro-vue",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "vue"
-}

@@ -2,10 +2,10 @@
   <section class="page-stack" v-if="detail">
     <section class="hero-card">
       <div>
-        <p class="eyebrow">Store Detail</p>
+        <p class="eyebrow">門店詳情</p>
         <h2>{{ detail.store.name }}</h2>
         <p class="hero-text">
-          {{ detail.store.region }} / {{ detail.store.area }} · {{ detail.store.address }}
+          {{ formatRegionArea(detail.store.region, detail.store.area) }} ・ {{ detail.store.address }}
         </p>
       </div>
       <div class="hero-actions">
@@ -14,34 +14,34 @@
     </section>
 
     <section class="stats-row">
-      <StatPanel label="当前 wait" :value="formatOptionalNumber(detail.store.wait)" />
-      <StatPanel label="waitingGroup" :value="formatOptionalNumber(detail.store.waiting_group)" />
-      <StatPanel label="ETA" :value="formatEta(detail.store.eta)" :hint="detail.store.eta.reason" />
-      <StatPanel label="更新时间" :value="formatDateTime(detail.data_updated_at)" />
+      <StatPanel label="等候組數" :value="formatOptionalNumber(detail.store.wait)" />
+      <StatPanel label="候位組數" :value="formatOptionalNumber(detail.store.waiting_group)" />
+      <StatPanel label="預估等候" :value="formatEta(detail.store.eta)" :hint="formatEtaReason(detail.store.eta.reason)" />
+      <StatPanel label="更新時間" :value="formatDateTime(detail.data_updated_at)" />
     </section>
 
     <section class="panel detail-grid">
       <div>
-        <p class="eyebrow">Current Queue</p>
-        <h3>最新显示号码</h3>
+        <p class="eyebrow">顯示號碼</p>
+        <h3>最新顯示號碼</h3>
         <code v-if="detail.latest_queue.store_queue.length">{{ detail.latest_queue.store_queue.join(", ") }}</code>
-        <p v-else class="muted-text">当前没有可用的 storeQueue。</p>
+        <p v-else class="muted-text">目前沒有可用的顯示號碼資料。</p>
       </div>
       <div class="detail-summary">
         <div>
-          <span>queue min</span>
+          <span>最小號碼</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_min) }}</strong>
         </div>
         <div>
-          <span>queue max</span>
+          <span>最大號碼</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_max) }}</strong>
         </div>
         <div>
-          <span>queue count</span>
+          <span>顯示數量</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_count) }}</strong>
         </div>
         <div>
-          <span>queue span</span>
+          <span>號碼跨度</span>
           <strong>{{ formatOptionalNumber(detail.latest_queue.queue_span) }}</strong>
         </div>
       </div>
@@ -49,46 +49,67 @@
 
     <section class="chart-grid" v-if="history">
       <TrendChart
-        title="最近 6 小时 wait 曲线"
-        label="wait"
-        color="#e85d3f"
-        :values="history.points.map((point) => point.wait)"
-        :start-label="historyStartLabel"
-        :end-label="historyEndLabel"
+        eyebrow="等候走勢"
+        title="最近 6 小時等候組數"
+        :headline="detailWaitHeadline"
+        description="以最近 6 小時的實際快照顯示等候組數變化。"
+        :labels="historyLabels"
+        :series="[
+          {
+            name: '等候組數',
+            color: '#e85d3f',
+            fill: true,
+            values: history.points.map((point) => point.wait),
+          },
+        ]"
       />
       <TrendChart
-        title="最近 6 小时 waitingGroup"
-        label="waitingGroup"
-        color="#3f7cff"
-        :values="history.points.map((point) => point.waiting_group)"
-        :start-label="historyStartLabel"
-        :end-label="historyEndLabel"
+        eyebrow="候位密度"
+        title="最近 6 小時候位組數"
+        :headline="detailWaitingGroupHeadline"
+        description="對照主要等候欄位，補充觀察候位組數的波動。"
+        :labels="historyLabels"
+        :series="[
+          {
+            name: '候位組數',
+            color: '#3f7cff',
+            fill: true,
+            values: history.points.map((point) => point.waiting_group),
+          },
+        ]"
       />
       <TrendChart
-        title="最近 6 小时 queue max"
-        label="queue_max"
-        color="#12a37d"
-        :values="history.points.map((point) => point.queue_max)"
-        :start-label="historyStartLabel"
-        :end-label="historyEndLabel"
+        eyebrow="號碼推進"
+        title="最近 6 小時顯示號碼上限"
+        :headline="detailQueueHeadline"
+        description="以顯示號碼上限觀察整體推進節奏。"
+        :labels="historyLabels"
+        :series="[
+          {
+            name: '顯示號碼上限',
+            color: '#12a37d',
+            fill: true,
+            values: history.points.map((point) => point.queue_max),
+          },
+        ]"
       />
     </section>
 
     <section class="panel" v-if="analytics">
       <div class="section-header">
         <div>
-          <p class="eyebrow">Today Insight</p>
-          <h3>今日高峰与建议时段</h3>
+          <p class="eyebrow">今日觀察</p>
+          <h3>今日高峰與建議時段</h3>
         </div>
       </div>
       <div class="insight-columns">
         <div>
-          <p class="muted-text">今日平均 wait</p>
-          <strong class="display-value">{{ formatOptionalNumber(analytics.today_average_wait) }}</strong>
+          <p class="muted-text">今日平均等候</p>
+          <strong class="display-value">{{ formatOptionalNumber(analytics.today_average_wait, ' 組', 2) }}</strong>
         </div>
         <div>
-          <p class="muted-text">当前时段历史均值</p>
-          <strong class="display-value">{{ formatOptionalNumber(analytics.current_hour_historical_average_wait) }}</strong>
+          <p class="muted-text">目前時段歷史均值</p>
+          <strong class="display-value">{{ formatOptionalNumber(analytics.current_hour_historical_average_wait, ' 組', 2) }}</strong>
         </div>
       </div>
       <div class="tag-groups">
@@ -96,15 +117,15 @@
           <p class="muted-text">今日高峰</p>
           <div class="tag-row">
             <span v-for="bucket in analytics.peak_hours" :key="bucket.hour" class="soft-tag">
-              {{ bucket.label }} · {{ formatOptionalNumber(bucket.average_wait) }}
+              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
             </span>
           </div>
         </div>
         <div>
-          <p class="muted-text">建议时段</p>
+          <p class="muted-text">建議時段</p>
           <div class="tag-row">
             <span v-for="bucket in analytics.recommended_hours" :key="bucket.hour" class="soft-tag soft-tag--good">
-              {{ bucket.label }} · {{ formatOptionalNumber(bucket.average_wait) }}
+              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
             </span>
           </div>
         </div>
@@ -113,7 +134,7 @@
   </section>
 
   <section v-else class="page-stack">
-    <p v-if="loading" class="muted-text">正在加载门店详情…</p>
+    <p v-if="loading" class="muted-text">正在載入門店詳情…</p>
     <p v-else-if="errorMessage" class="error-banner">{{ errorMessage }}</p>
   </section>
 </template>
@@ -126,7 +147,14 @@ import { fetchStoreAnalytics, fetchStoreDetail, fetchStoreHistory } from "../api
 import StatPanel from "../components/StatPanel.vue";
 import TrendChart from "../components/TrendChart.vue";
 import type { StoreAnalyticsResponse, StoreDetailResponse, StoreHistoryResponse } from "../types/api";
-import { formatDateTime, formatEta, formatOptionalNumber } from "../utils/format";
+import {
+  formatDateTime,
+  formatEta,
+  formatEtaReason,
+  formatOptionalNumber,
+  formatRegionArea,
+  formatTime,
+} from "../utils/format";
 
 const route = useRoute();
 const detail = ref<StoreDetailResponse | null>(null);
@@ -135,20 +163,30 @@ const analytics = ref<StoreAnalyticsResponse | null>(null);
 const loading = ref(false);
 const errorMessage = ref("");
 
-const historyStartLabel = computed(() => {
+const historyLabels = computed(() => {
   const points = history.value?.points || [];
-  return points.length ? formatDateTime(points[0].timestamp) : "--";
+  return points.map((point) => formatTime(point.timestamp));
 });
 
-const historyEndLabel = computed(() => {
-  const points = history.value?.points || [];
-  return points.length ? formatDateTime(points[points.length - 1].timestamp) : "--";
+const detailWaitHeadline = computed(() => {
+  const latest = [...(history.value?.points || [])].reverse().find((point) => point.wait !== null)?.wait;
+  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
+});
+
+const detailWaitingGroupHeadline = computed(() => {
+  const latest = [...(history.value?.points || [])].reverse().find((point) => point.waiting_group !== null)?.waiting_group;
+  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
+});
+
+const detailQueueHeadline = computed(() => {
+  const latest = [...(history.value?.points || [])].reverse().find((point) => point.queue_max !== null)?.queue_max;
+  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest)}`;
 });
 
 async function loadStore() {
   const storeId = Number(route.params.storeId);
   if (!storeId) {
-    errorMessage.value = "无效的门店 ID";
+    errorMessage.value = "無效的門店 ID";
     return;
   }
 
@@ -165,7 +203,7 @@ async function loadStore() {
     history.value = historyResponse;
     analytics.value = analyticsResponse;
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "加载失败";
+    errorMessage.value = error instanceof Error ? error.message : "載入失敗";
   } finally {
     loading.value = false;
   }

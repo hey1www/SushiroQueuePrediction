@@ -8,6 +8,11 @@ __pycache__/
 node_modules/
 dist/
 coverage/
+/backend/
+/docs/
+/infra/
+/scripts/
+/sushiro-vue/
 backend/.env
 backend/.venv/
 backend/data/*.db
