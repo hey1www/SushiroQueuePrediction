@@ -58,6 +58,11 @@ input {
   margin-bottom: 28px;
 }
 
+.topbar > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .topbar h1,
 .hero-card h2,
 .chart-card h3,
@@ -70,7 +75,8 @@ input {
 }
 
 .topbar h1 {
-  font-size: clamp(2.4rem, 5vw, 4rem);
+  max-width: 16ch;
+  font-size: clamp(1.45rem, 2.3vw, 2.45rem);
 }
 
 .topnav {
@@ -656,6 +662,11 @@ code {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar h1 {
+    max-width: 100%;
+    font-size: clamp(1.55rem, 8vw, 2.1rem);
   }
 
   .hero-card,

@@ -2,7 +2,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <h1>朗来了 —— 香港寿司郎排队助手</h1>
+        <h1>朗來了 —— 香港壽司郎排隊助手</h1>
       </div>
       <nav class="topnav">
         <RouterLink to="/">即時看板</RouterLink>
