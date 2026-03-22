@@ -93,6 +93,24 @@
           },
         ]"
       />
+      <TrendChart
+        eyebrow="預估等待"
+        title="當天 ETA"
+        :headline="detailEtaHeadline"
+        description="顯示當天每次採集時刻保存的 ETA 估值；單位為分鐘，適合用來看走勢，不代表實際入座承諾。"
+        :labels="historyTimeline"
+        x-axis-type="time"
+        :x-min="chartRange.start"
+        :x-max="chartRange.end"
+        :series="[
+          {
+            name: 'ETA',
+            color: '#c87f21',
+            fill: true,
+            values: etaHistoryValues,
+          },
+        ]"
+      />
       <div class="dual-grid">
         <TrendChart
           eyebrow="號碼推進"
@@ -262,6 +280,7 @@ const dayHistoryPoints = computed(() => {
 const historyTimeline = computed(() => dayHistoryPoints.value.map((point) => point.timestamp));
 const waitHistoryValues = computed(() => dayHistoryPoints.value.map((point) => point.wait));
 const waitingGroupHistoryValues = computed(() => dayHistoryPoints.value.map((point) => point.waiting_group));
+const etaHistoryValues = computed(() => dayHistoryPoints.value.map((point) => point.eta_minutes));
 const onsiteQueueHistoryValues = computed(() =>
   dayHistoryPoints.value.map((point) => getOnsiteQueueMax(point)),
 );
@@ -278,6 +297,11 @@ const detailWaitHeadline = computed(() => {
 const detailWaitingGroupHeadline = computed(() => {
   const latest = [...dayHistoryPoints.value].reverse().find((point) => point.waiting_group !== null)?.waiting_group;
   return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
+});
+
+const detailEtaHeadline = computed(() => {
+  const latest = [...dayHistoryPoints.value].reverse().find((point) => point.eta_minutes !== null)?.eta_minutes;
+  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 分鐘")}`;
 });
 
 const detailOnsiteQueueHeadline = computed(() => {

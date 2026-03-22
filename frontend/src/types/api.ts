@@ -97,6 +97,9 @@ export interface HistoryPoint {
   timestamp: string;
   wait: number | null;
   waiting_group: number | null;
+  eta_minutes: number | null;
+  eta_confidence: "low" | "medium" | "high" | null;
+  eta_reason: string | null;
   queue_max: number | null;
   queue_min: number | null;
   reservation_queue_max: number | null;
