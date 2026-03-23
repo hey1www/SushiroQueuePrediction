@@ -66,6 +66,21 @@ export interface HourBucket {
   average_queue_progress: number | null;
 }
 
+export interface HistoricalProfileContext {
+  requested_profile: string;
+  matched_profile: string;
+  requested_profile_label: string;
+  matched_profile_label: string;
+  slot_label: string;
+  match_label: string;
+  fallback_level: string;
+  fallback_label: string;
+  sample_count: number;
+  average_wait: number | null;
+  average_waiting_group: number | null;
+  average_queue_progress: number | null;
+}
+
 export interface StoreAnalyticsResponse {
   store_id: number;
   generated_at: string;
@@ -73,6 +88,7 @@ export interface StoreAnalyticsResponse {
   current_hour_historical_average_wait: number | null;
   weekday_average_wait: number | null;
   weekend_average_wait: number | null;
+  current_profile_context: HistoricalProfileContext | null;
   peak_hours: HourBucket[];
   recommended_hours: HourBucket[];
   hourly_average_wait: HourBucket[];

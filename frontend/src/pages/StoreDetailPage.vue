@@ -15,7 +15,7 @@
 
     <section class="stats-row">
       <StatPanel label="預估等待時間" :value="formatOptionalNumber(detail.store.wait, ' 分鐘')" />
-      <StatPanel label="候位組數" :value="formatOptionalNumber(detail.store.waiting_group)" />
+      <StatPanel label="候位組數" :value="formatOptionalNumber(detail.store.waiting_group, ' 桌')" :hint="waitingGroupHistoricalHint" />
       <StatPanel label="本地 ETA" :value="formatEta(detail.store.eta)" :hint="formatEtaReason(detail.store.eta.reason)" />
       <StatPanel label="更新時間" :value="formatDateTime(detail.data_updated_at)" />
     </section>
@@ -59,19 +59,26 @@
     <section class="chart-grid" v-if="history">
       <TrendChart
         eyebrow="等待時間"
-        title="當天預估等待時間"
-        :headline="detailWaitHeadline"
-        description="顯示當天 10:00 至 23:00 的預估等待時間走勢；單位為分鐘，數值越高代表等待更久。"
+        title="當天等待時間對照"
+        :headline="detailWaitEtaHeadline"
+        description="紅線為上游 API 的預估等待時間，黃線為本地 ETA；兩者同為分鐘，可直接對照系統值與本地估算差異。"
         :labels="historyTimeline"
         x-axis-type="time"
         :x-min="chartRange.start"
         :x-max="chartRange.end"
         :series="[
           {
-            name: '預估等待時間',
+            name: '預估等待時間（API）',
             color: '#e85d3f',
             fill: true,
             values: waitHistoryValues,
+          },
+          {
+            name: '本地 ETA',
+            color: '#c87f21',
+            fill: false,
+            dashed: true,
+            values: etaHistoryValues,
           },
         ]"
       />
@@ -79,7 +86,7 @@
         eyebrow="候位密度"
         title="當天候位組數"
         :headline="detailWaitingGroupHeadline"
-        description="顯示當天 10:00 至 23:00 的候位組數變化，可用來對照現場排隊壓力。"
+        description="顯示當天 10:00 至 23:00 的候位組數變化，可用來對照現場排隊壓力。若有同類歷史樣本，標題會一併提示匹配到的歷史均值。"
         :labels="historyTimeline"
         x-axis-type="time"
         :x-min="chartRange.start"
@@ -90,24 +97,6 @@
             color: '#3f7cff',
             fill: true,
             values: waitingGroupHistoryValues,
-          },
-        ]"
-      />
-      <TrendChart
-        eyebrow="預估等待"
-        title="當天 ETA"
-        :headline="detailEtaHeadline"
-        description="顯示當天每次採集時刻保存的 ETA 估值；單位為分鐘，適合用來看走勢，不代表實際入座承諾。"
-        :labels="historyTimeline"
-        x-axis-type="time"
-        :x-min="chartRange.start"
-        :x-max="chartRange.end"
-        :series="[
-          {
-            name: 'ETA',
-            color: '#c87f21',
-            fill: true,
-            values: etaHistoryValues,
           },
         ]"
       />
@@ -289,19 +278,36 @@ const reservationQueueHistoryValues = computed(() =>
   dayHistoryPoints.value.map((point) => getReservationQueueDisplayMax(point)),
 );
 
-const detailWaitHeadline = computed(() => {
-  const latest = [...dayHistoryPoints.value].reverse().find((point) => point.wait !== null)?.wait;
-  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 分鐘")}`;
-});
+const currentProfileContext = computed(() => analytics.value?.current_profile_context || null);
 
 const detailWaitingGroupHeadline = computed(() => {
   const latest = [...dayHistoryPoints.value].reverse().find((point) => point.waiting_group !== null)?.waiting_group;
-  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
+  const average = currentProfileContext.value?.average_waiting_group;
+  const matchLabel = currentProfileContext.value?.match_label;
+  if (latest === undefined || latest === null) {
+    if (average === undefined || average === null || !matchLabel) return "暫無資料";
+    return `歷史平均 ${formatOptionalNumber(average, " 桌", 1)} ・ ${matchLabel}`;
+  }
+  if (average === undefined || average === null || !matchLabel) {
+    return `最新 ${formatOptionalNumber(latest, " 桌")}`;
+  }
+  return `最新 ${formatOptionalNumber(latest, " 桌")} ・ 歷史平均 ${formatOptionalNumber(average, " 桌", 1)}`;
 });
 
-const detailEtaHeadline = computed(() => {
+const detailWaitEtaHeadline = computed(() => {
+  const latestWait = [...dayHistoryPoints.value].reverse().find((point) => point.wait !== null)?.wait;
   const latest = [...dayHistoryPoints.value].reverse().find((point) => point.eta_minutes !== null)?.eta_minutes;
-  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 分鐘")}`;
+  if ((latestWait === undefined || latestWait === null) && (latest === undefined || latest === null)) {
+    return "暫無資料";
+  }
+  return `API ${formatOptionalNumber(latestWait, " 分鐘")} ・ ETA ${formatOptionalNumber(latest, " 分鐘")}`;
+});
+
+const waitingGroupHistoricalHint = computed(() => {
+  const average = currentProfileContext.value?.average_waiting_group;
+  const matchLabel = currentProfileContext.value?.match_label;
+  if (average === undefined || average === null || !matchLabel) return "";
+  return `同類歷史平均 ${formatOptionalNumber(average, " 桌", 1)} ・ ${matchLabel}`;
 });
 
 const detailOnsiteQueueHeadline = computed(() => {

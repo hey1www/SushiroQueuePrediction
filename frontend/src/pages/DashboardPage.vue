@@ -30,12 +30,17 @@
         <span>{{ quickSuggestion.description }}</span>
       </div>
       <div v-if="quickSuggestion.mode === 'queue_free'" class="recommend-chip-grid">
-        <article v-for="item in quickSuggestion.items" :key="item.id" class="recommend-chip">
+        <RouterLink
+          v-for="item in quickSuggestion.items"
+          :key="item.id"
+          class="recommend-chip recommend-chip--link"
+          :to="`/stores/${item.id}`"
+        >
           <strong>{{ item.name }}</strong>
           <small>{{ formatRegionArea(item.region, item.area) }}</small>
-          <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 組") }}</span>
+          <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 桌") }}</span>
           <span>本地 ETA {{ formatOptionalNumber(item.eta_minutes, " 分鐘") }}</span>
-        </article>
+        </RouterLink>
       </div>
       <div v-else class="recommend-list">
         <article v-for="item in quickSuggestion.items" :key="item.id" class="recommend-item">
@@ -46,7 +51,7 @@
           <div class="recommend-item__metrics">
             <span>預估等待時間 {{ formatOptionalNumber(item.wait, " 分鐘") }}</span>
             <span>現場號碼數 {{ formatOptionalNumber(item.queue_count) }}</span>
-            <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 組") }}</span>
+            <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 桌") }}</span>
           </div>
         </article>
       </div>
@@ -83,8 +88,10 @@
     <p v-if="errorMessage" class="error-banner">{{ errorMessage }}</p>
     <p v-if="loading" class="muted-text">正在載入門店資料…</p>
 
-    <section class="store-grid" v-if="response">
-      <StoreCard v-for="store in response.stores" :key="store.id" :store="store" />
+    <p v-if="response && !visibleStores.length" class="muted-text">目前無需在下方重複展示的排隊門店。</p>
+
+    <section class="store-grid" v-if="visibleStores.length">
+      <StoreCard v-for="store in visibleStores" :key="store.id" :store="store" />
     </section>
   </section>
 </template>
@@ -148,8 +155,14 @@ const queueFreeStores = computed(() =>
   recommendableStores.value.filter((store) => isQueueFreeStore(store)).sort(compareSuggestedStores),
 );
 
+const queueFreeStoreIds = computed(() => new Set(queueFreeStores.value.map((store) => store.id)));
+
 const rankedStores = computed(() =>
   [...recommendableStores.value].filter((store) => !isQueueFreeStore(store)).sort(compareSuggestedStores).slice(0, 3),
+);
+
+const visibleStores = computed(() =>
+  (response.value?.stores || []).filter((store) => !queueFreeStoreIds.value.has(store.id)),
 );
 
 const quickSuggestion = computed<QuickSuggestion | null>(() => {

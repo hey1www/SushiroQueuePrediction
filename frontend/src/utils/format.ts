@@ -80,6 +80,18 @@ export function formatEtaReason(reason: string | null | undefined) {
     "using recent queue progression with waiting groups": "依候位組數與近 15 分鐘叫號速度推算 ETA。",
     "blending upstream waiting time with historical queue progression": "結合上游等待時間與同時段歷史叫號速度推算 ETA。",
     "using historical average queue progression with waiting groups": "依候位組數與同時段歷史叫號速度推算 ETA。",
+    "blending historical waiting profile, recent queue progression, and upstream waiting time":
+      "結合同類歷史等待輪廓、近 15 分鐘叫號速度與上游等待時間推算 ETA。",
+    "blending historical waiting profile with recent queue progression":
+      "結合同類歷史等待輪廓與近 15 分鐘叫號速度推算 ETA。",
+    "blending historical waiting profile with upstream waiting time":
+      "結合同類歷史等待輪廓與上游等待時間推算 ETA。",
+    "using historical waiting profile": "依同日型同時段歷史等待輪廓推算 ETA。",
+    "blending historical queue progression profile with upstream waiting time":
+      "結合同日型歷史叫號速度與上游等待時間推算 ETA。",
+    "using historical queue progression profile": "依同日型歷史叫號速度推算 ETA。",
+    "blending recent queue progression with upstream waiting time":
+      "結合近 15 分鐘叫號速度與上游等待時間推算 ETA。",
     "falling back to minimum service rate with waiting groups": "資料不足，改用候位組數與保守服務速度推算 ETA。",
     "wait is unavailable": "缺少預估等待時間資料，暫不提供 ETA。",
     "no waiting groups right now": "目前顯示幾乎無需等待。",

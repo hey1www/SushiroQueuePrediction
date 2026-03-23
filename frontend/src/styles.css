@@ -297,6 +297,16 @@ input {
   gap: 6px;
 }
 
+.recommend-chip--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.recommend-chip--link:hover {
+  background: #eeeeee;
+}
+
 .recommend-chip strong,
 .recommend-item strong {
   font-size: 1rem;
