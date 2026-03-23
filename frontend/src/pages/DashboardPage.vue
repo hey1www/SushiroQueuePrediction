@@ -18,17 +18,38 @@
       <StatPanel label="更新時間" :value="formatDateTime(response?.data_updated_at)" hint="香港時間" />
     </section>
 
-    <section v-if="topRecommendation" class="recommend-card">
-      <div>
-        <p class="eyebrow">快速建議</p>
-        <h3>{{ topRecommendation.name }}</h3>
+    <section v-if="quickSuggestion" class="recommend-card">
+      <div class="recommend-card__header">
+        <div>
+          <p class="eyebrow">快速建議</p>
+          <h3>{{ quickSuggestion.title }}</h3>
+        </div>
+        <small class="recommend-card__count">{{ quickSuggestion.summary }}</small>
       </div>
       <div class="recommend-card__meta">
-        <span>{{ formatRegionArea(topRecommendation.region, topRecommendation.area) }}</span>
-        <span>等待時間 {{ formatOptionalNumber(topRecommendation.wait, ' 分鐘') }}</span>
-        <span>ETA {{ formatOptionalNumber(topRecommendation.eta_minutes, ' 分鐘') }}</span>
+        <span>{{ quickSuggestion.description }}</span>
       </div>
-      <p>{{ formatRecommendationReason(topRecommendation.reason) }}</p>
+      <div v-if="quickSuggestion.mode === 'queue_free'" class="recommend-chip-grid">
+        <article v-for="item in quickSuggestion.items" :key="item.id" class="recommend-chip">
+          <strong>{{ item.name }}</strong>
+          <small>{{ formatRegionArea(item.region, item.area) }}</small>
+          <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 組") }}</span>
+          <span>本地 ETA {{ formatOptionalNumber(item.eta_minutes, " 分鐘") }}</span>
+        </article>
+      </div>
+      <div v-else class="recommend-list">
+        <article v-for="item in quickSuggestion.items" :key="item.id" class="recommend-item">
+          <div class="recommend-item__head">
+            <strong>{{ item.name }}</strong>
+            <small>{{ formatRegionArea(item.region, item.area) }}</small>
+          </div>
+          <div class="recommend-item__metrics">
+            <span>預估等待時間 {{ formatOptionalNumber(item.wait, " 分鐘") }}</span>
+            <span>現場號碼數 {{ formatOptionalNumber(item.queue_count) }}</span>
+            <span>候位組數 {{ formatOptionalNumber(item.waiting_group, " 組") }}</span>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="panel">
@@ -72,16 +93,34 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { RouterLink } from "vue-router";
 
-import { fetchCurrentStores, fetchRecommendations } from "../api/stores";
+import { fetchCurrentStores } from "../api/stores";
 import StatPanel from "../components/StatPanel.vue";
 import StoreCard from "../components/StoreCard.vue";
 import { useDashboardFilters } from "../stores/useFilters";
-import type { RecommendationsResponse, StoresCurrentResponse } from "../types/api";
-import { formatDateTime, formatOptionalNumber, formatRecommendationReason, formatRegionArea } from "../utils/format";
+import type { StoreCurrent, StoresCurrentResponse } from "../types/api";
+import { formatDateTime, formatOptionalNumber, formatRegionArea } from "../utils/format";
+
+interface QuickSuggestionItem {
+  id: number;
+  name: string;
+  area: string | null;
+  region: string | null;
+  wait: number | null;
+  waiting_group: number | null;
+  eta_minutes: number | null;
+  queue_count: number | null;
+}
+
+interface QuickSuggestion {
+  mode: "queue_free" | "ranked";
+  title: string;
+  summary: string;
+  description: string;
+  items: QuickSuggestionItem[];
+}
 
 const filters = useDashboardFilters();
 const response = ref<StoresCurrentResponse | null>(null);
-const recommendations = ref<RecommendationsResponse | null>(null);
 const loading = ref(false);
 const errorMessage = ref("");
 const regions = ref<string[]>([]);
@@ -99,28 +138,97 @@ const lowestEtaLabel = computed(() => {
   return `${Math.min(...etaValues)} 分鐘`;
 });
 
-const topRecommendation = computed(() => recommendations.value?.recommendations[0] || null);
+const recommendableStores = computed(() =>
+  (response.value?.stores || []).filter(
+    (store) => store.store_status === "OPEN" && store.local_ticketing_status === "ON",
+  ),
+);
+
+const queueFreeStores = computed(() =>
+  recommendableStores.value.filter((store) => isQueueFreeStore(store)).sort(compareSuggestedStores),
+);
+
+const rankedStores = computed(() =>
+  [...recommendableStores.value].filter((store) => !isQueueFreeStore(store)).sort(compareSuggestedStores).slice(0, 3),
+);
+
+const quickSuggestion = computed<QuickSuggestion | null>(() => {
+  if (!recommendableStores.value.length) return null;
+
+  if (queueFreeStores.value.length) {
+    return {
+      mode: "queue_free",
+      title: "目前免排隊門店",
+      summary: `共 ${queueFreeStores.value.length} 間`,
+      description: "候位組數為 0 的門店會先集中到這裡；如果同時有多家，全部都值得優先考慮。",
+      items: queueFreeStores.value.map(toQuickSuggestionItem),
+    };
+  }
+
+  return {
+    mode: "ranked",
+    title: "目前較快建議",
+    summary: `優先顯示 ${rankedStores.value.length} 間`,
+    description: "目前可現場派籌門店都在排隊，以下先按預估等待時間，再按現場號碼數與候位組數排序。",
+    items: rankedStores.value.map(toQuickSuggestionItem),
+  };
+});
+
+function isQueueFreeStore(store: StoreCurrent) {
+  if (store.waiting_group === 0) return true;
+  if (store.waiting_group !== null) return false;
+  return store.wait === 0 || store.eta.estimated_wait_minutes === 0;
+}
+
+function comparableWait(store: StoreCurrent) {
+  return store.wait ?? store.eta.estimated_wait_minutes ?? Number.POSITIVE_INFINITY;
+}
+
+function comparableQueueCount(store: StoreCurrent) {
+  return store.queue.queue_count ?? Number.POSITIVE_INFINITY;
+}
+
+function comparableWaitingGroup(store: StoreCurrent) {
+  return store.waiting_group ?? Number.POSITIVE_INFINITY;
+}
+
+function compareSuggestedStores(left: StoreCurrent, right: StoreCurrent) {
+  const nameDiff = (left.name || "").localeCompare(right.name || "", "zh-HK");
+
+  return (
+    comparableWait(left) - comparableWait(right) ||
+    comparableQueueCount(left) - comparableQueueCount(right) ||
+    comparableWaitingGroup(left) - comparableWaitingGroup(right) ||
+    nameDiff
+  );
+}
+
+function toQuickSuggestionItem(store: StoreCurrent): QuickSuggestionItem {
+  return {
+    id: store.id,
+    name: store.name || `門店 ${store.id}`,
+    area: store.area,
+    region: store.region,
+    wait: store.wait,
+    waiting_group: store.waiting_group,
+    eta_minutes: store.eta.estimated_wait_minutes,
+    queue_count: store.queue.queue_count,
+  };
+}
 
 async function loadDashboard() {
   loading.value = true;
   errorMessage.value = "";
 
   try {
-    const [storesResponse, recommendationResponse] = await Promise.all([
-      fetchCurrentStores({
-        region: filters.region || undefined,
-        open_only: filters.openOnly,
-        local_ticket_only: filters.localTicketOnly,
-        sort: filters.sort,
-      }),
-      fetchRecommendations({
-        region: filters.region || undefined,
-        limit: 5,
-      }),
-    ]);
+    const storesResponse = await fetchCurrentStores({
+      region: filters.region || undefined,
+      open_only: filters.openOnly,
+      local_ticket_only: filters.localTicketOnly,
+      sort: filters.sort,
+    });
 
     response.value = storesResponse;
-    recommendations.value = recommendationResponse;
 
     if (!regions.value.length) {
       const allStores = await fetchCurrentStores();

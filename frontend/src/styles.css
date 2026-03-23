@@ -18,9 +18,15 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
-  min-width: 320px;
   background: linear-gradient(180deg, #d9d9d9 0%, #efefef 18%, #ffffff 100%);
   color: var(--ink);
   line-height: 1.55;
@@ -39,12 +45,16 @@ input {
 
 #app {
   min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .app-shell {
-  width: min(1180px, calc(100vw - 32px));
+  width: 100%;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 24px 16px 48px;
 }
 
 .topbar {
@@ -119,6 +129,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .hero-card,
@@ -130,6 +141,7 @@ input {
   background: #ffffff;
   backdrop-filter: none;
   box-shadow: 8px 8px 0 rgba(17, 17, 17, 0.08);
+  min-width: 0;
 }
 
 .hero-card {
@@ -185,6 +197,7 @@ input {
 .dual-grid {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .stats-row {
@@ -225,11 +238,31 @@ input {
     #ffffff;
 }
 
+.recommend-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.recommend-card__header > div {
+  min-width: 0;
+}
+
+.recommend-card__count {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .recommend-card__meta {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
   color: var(--muted);
+  min-width: 0;
 }
 
 .recommend-card p:last-child,
@@ -237,6 +270,67 @@ input {
   margin: 0;
   color: var(--muted);
   line-height: 1.65;
+}
+
+.recommend-chip-grid,
+.recommend-list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.recommend-chip-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.recommend-chip,
+.recommend-item {
+  border: 1px solid #d6d6d6;
+  background: #f6f6f6;
+  padding: 14px;
+  min-width: 0;
+}
+
+.recommend-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recommend-chip strong,
+.recommend-item strong {
+  font-size: 1rem;
+}
+
+.recommend-chip small,
+.recommend-item small {
+  color: var(--muted);
+}
+
+.recommend-chip span,
+.recommend-item__metrics span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.recommend-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.recommend-item__head,
+.recommend-item__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recommend-item__metrics {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .filter-row,
@@ -301,6 +395,7 @@ select {
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .store-card__badges,
@@ -379,6 +474,12 @@ select {
   gap: 12px;
 }
 
+.metric-grid > *,
+.detail-summary > *,
+.insight-columns > * {
+  min-width: 0;
+}
+
 .metric-grid p,
 .detail-summary span {
   margin: 0;
@@ -428,6 +529,7 @@ code {
   box-shadow: var(--shadow);
   border-radius: 24px;
   padding: 22px;
+  min-width: 0;
 }
 
 .chart-header {
@@ -495,6 +597,7 @@ code {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .chart-shell--interactive {
@@ -510,6 +613,7 @@ code {
   height: 324px;
   border-radius: 20px;
   overflow: hidden;
+  min-width: 0;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 253, 248, 0.55)),
     linear-gradient(180deg, rgba(23, 32, 42, 0.03), rgba(23, 32, 42, 0.01));
@@ -713,6 +817,11 @@ code {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 20px;
+  min-width: 0;
+}
+
+.detail-grid > * {
+  min-width: 0;
 }
 
 .queue-display-list {
@@ -743,6 +852,7 @@ code {
   align-items: center;
   padding: 14px 0;
   border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
 
 .table-row:last-child {
@@ -763,11 +873,11 @@ code {
   flex-wrap: wrap;
   color: var(--muted);
   justify-content: flex-end;
+  min-width: 0;
 }
 
 @media (max-width: 860px) {
   .app-shell {
-    width: min(100vw - 28px, 100%);
     padding-top: 14px;
   }
 
@@ -805,8 +915,7 @@ code {
 
 @media (max-width: 720px) {
   .app-shell {
-    width: min(100vw - 24px, 100%);
-    padding: 12px 0 32px;
+    padding: 12px 14px 32px;
   }
 
   .topbar {
@@ -865,11 +974,25 @@ code {
     grid-template-columns: 1fr;
   }
 
+  .app-shell {
+    padding-inline: 12px;
+  }
+
   .topnav,
   .hero-actions,
   .recommend-card__meta,
   .chart-legend {
     width: 100%;
+  }
+
+  .recommend-card__header,
+  .recommend-item {
+    flex-direction: column;
+  }
+
+  .recommend-item__metrics {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .button-link,
