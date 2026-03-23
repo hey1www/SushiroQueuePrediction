@@ -21,10 +21,7 @@
 body {
   margin: 0;
   min-width: 320px;
-  background:
-    radial-gradient(circle at top left, rgba(232, 93, 63, 0.16), transparent 25%),
-    radial-gradient(circle at top right, rgba(63, 124, 255, 0.12), transparent 25%),
-    linear-gradient(180deg, #f4efe6 0%, #f7f4ed 38%, #fbfaf6 100%);
+  background: linear-gradient(180deg, #d9d9d9 0%, #efefef 18%, #ffffff 100%);
   color: var(--ink);
   line-height: 1.55;
 }
@@ -56,6 +53,8 @@ input {
   gap: 24px;
   align-items: center;
   margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #111;
 }
 
 .topbar > div {
@@ -102,16 +101,16 @@ input {
 
 .topnav a {
   padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  border: 1px solid #111;
+  background: #f2f2f2;
   min-width: 96px;
   text-align: center;
 }
 
 .topnav a.router-link-active {
-  border-color: transparent;
-  background: var(--ink);
+  border-color: #111;
+  background: #111;
   color: white;
 }
 
@@ -124,19 +123,18 @@ input {
 
 .hero-card,
 .panel,
-.chart-card,
 .recommend-card,
 .store-card,
 .stat-panel {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  border: 1px solid #111;
+  background: #ffffff;
+  backdrop-filter: none;
+  box-shadow: 8px 8px 0 rgba(17, 17, 17, 0.08);
 }
 
 .hero-card {
   padding: 30px;
-  border-radius: 28px;
+  border-radius: 0;
   display: flex;
   justify-content: space-between;
   gap: 24px;
@@ -161,16 +159,16 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: 0;
   padding: 11px 16px;
-  border: 1px solid var(--line);
-  background: white;
+  border: 1px solid #111;
+  background: #ffffff;
   cursor: pointer;
 }
 
 .button-link--solid {
-  border-color: transparent;
-  background: var(--ink);
+  border-color: #111;
+  background: #111;
   color: white;
 }
 
@@ -194,7 +192,7 @@ input {
 }
 
 .stat-panel {
-  border-radius: 22px;
+  border-radius: 0;
   padding: 20px;
 }
 
@@ -214,7 +212,7 @@ input {
 
 .recommend-card,
 .panel {
-  border-radius: 24px;
+  border-radius: 0;
   padding: 22px;
 }
 
@@ -223,8 +221,8 @@ input {
   flex-direction: column;
   gap: 8px;
   background:
-    linear-gradient(130deg, rgba(232, 93, 63, 0.12), rgba(255, 253, 248, 0.9)),
-    var(--panel);
+    linear-gradient(180deg, rgba(17, 17, 17, 0.03), rgba(255, 255, 255, 0.92)),
+    #ffffff;
 }
 
 .recommend-card__meta {
@@ -258,9 +256,9 @@ input {
 }
 
 select {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: white;
+  border: 1px solid #111;
+  border-radius: 0;
+  background: #ffffff;
   padding: 10px 12px;
 }
 
@@ -281,7 +279,7 @@ select {
 }
 
 .store-card {
-  border-radius: 24px;
+  border-radius: 0;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -354,10 +352,23 @@ select {
   color: var(--muted);
 }
 
-.status-badge[data-tone="accent"],
-.soft-tag {
+.status-badge[data-tone="accent"] {
   background: rgba(63, 124, 255, 0.1);
   color: var(--accent-2);
+}
+
+.soft-tag {
+  background: #efefef;
+  color: #111;
+  border-color: #d0d0d0;
+  border-radius: 0;
+}
+
+.soft-tag--good {
+  background: #e7e7e7;
+  color: #111;
+  border-color: #c8c8c8;
+  border-radius: 0;
 }
 
 .metric-grid,
@@ -388,8 +399,9 @@ select {
   flex-direction: column;
   gap: 8px;
   padding: 14px;
-  border-radius: 18px;
-  background: rgba(23, 32, 42, 0.04);
+  border-radius: 0;
+  border: 1px solid #d6d6d6;
+  background: #f3f3f3;
 }
 
 code {
@@ -410,6 +422,10 @@ code {
 }
 
 .chart-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
   border-radius: 24px;
   padding: 22px;
 }
@@ -679,17 +695,18 @@ code {
 .empty-inline,
 .error-banner {
   padding: 14px 16px;
-  border-radius: 16px;
+  border-radius: 0;
 }
 
 .empty-inline {
-  background: rgba(23, 32, 42, 0.05);
-  color: var(--muted);
+  background: #f1f1f1;
+  color: #555;
 }
 
 .error-banner {
-  color: #a2432d;
-  background: rgba(232, 93, 63, 0.14);
+  color: #111;
+  background: #ebebeb;
+  border: 1px solid #111;
 }
 
 .detail-grid {
@@ -887,10 +904,9 @@ code {
   .hero-card,
   .panel,
   .recommend-card,
-  .chart-card,
   .stat-panel,
   .store-card {
-    border-radius: 20px;
+    border-radius: 0;
   }
 
   .chart-canvas {
