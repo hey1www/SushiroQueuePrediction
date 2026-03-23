@@ -13,8 +13,8 @@
 
     <div class="metric-grid">
       <div>
-        <p>等候組數</p>
-        <strong>{{ formatOptionalNumber(store.wait) }}</strong>
+        <p>預估等待時間</p>
+        <strong>{{ formatOptionalNumber(store.wait, ' 分鐘') }}</strong>
       </div>
       <div>
         <p>候位組數</p>
@@ -25,7 +25,7 @@
         <strong>{{ formatOptionalNumber(onsiteQueueCount) }}</strong>
       </div>
       <div>
-        <p>預估等候</p>
+        <p>本地 ETA</p>
         <strong>{{ formatEta(store.eta) }}</strong>
       </div>
     </div>

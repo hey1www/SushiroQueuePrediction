@@ -14,7 +14,7 @@
     <section class="stats-row">
       <StatPanel label="門店數量" :value="String(response?.stores.length || 0)" hint="目前回傳的門店總數" />
       <StatPanel label="營業中" :value="String(openStoreCount)" hint="目前仍在營業的門店" />
-      <StatPanel label="最快預估" :value="lowestEtaLabel" hint="以可估算門店為準" />
+      <StatPanel label="最快 ETA" :value="lowestEtaLabel" hint="以本地 ETA 可估算門店為準" />
       <StatPanel label="更新時間" :value="formatDateTime(response?.data_updated_at)" hint="香港時間" />
     </section>
 
@@ -25,8 +25,8 @@
       </div>
       <div class="recommend-card__meta">
         <span>{{ formatRegionArea(topRecommendation.region, topRecommendation.area) }}</span>
-        <span>等候 {{ formatOptionalNumber(topRecommendation.wait) }} 組</span>
-        <span>預估 {{ formatOptionalNumber(topRecommendation.eta_minutes, ' 分鐘') }}</span>
+        <span>等待時間 {{ formatOptionalNumber(topRecommendation.wait, ' 分鐘') }}</span>
+        <span>ETA {{ formatOptionalNumber(topRecommendation.eta_minutes, ' 分鐘') }}</span>
       </div>
       <p>{{ formatRecommendationReason(topRecommendation.reason) }}</p>
     </section>
@@ -43,8 +43,8 @@
         <label>
           <span>排序方式</span>
           <select v-model="filters.sort">
-            <option value="eta">按預估等候</option>
-            <option value="wait">按等候組數</option>
+            <option value="eta">按 ETA</option>
+            <option value="wait">按預估等待時間</option>
             <option value="name">按門店名稱</option>
           </select>
         </label>

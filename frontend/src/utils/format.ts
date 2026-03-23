@@ -74,11 +74,18 @@ export function formatEtaReason(reason: string | null | undefined) {
     "store is not open": "門店尚未營業，暫不提供預估。",
     "ticketing is currently unavailable": "目前未開放派籌，暫不提供預估。",
     "ticketing available": "目前可派籌。",
-    "wait is unavailable": "缺少等候資料，暫不提供預估。",
-    "no waiting groups right now": "目前幾乎無需等候。",
-    "using recent queue progression": "依近 15 分鐘顯示號碼推進速度估算。",
-    "using historical average queue progression": "改用同時段歷史平均推進速度估算。",
-    "falling back to minimum service rate": "資料不足，改用保守服務速度估算。",
+    "queue metrics are unavailable": "缺少候位組數或等待時間資料，暫不提供 ETA。",
+    "using upstream waiting time": "直接採用上游回傳的預估等待時間。",
+    "blending upstream waiting time with recent queue progression": "結合上游等待時間與近 15 分鐘叫號速度推算 ETA。",
+    "using recent queue progression with waiting groups": "依候位組數與近 15 分鐘叫號速度推算 ETA。",
+    "blending upstream waiting time with historical queue progression": "結合上游等待時間與同時段歷史叫號速度推算 ETA。",
+    "using historical average queue progression with waiting groups": "依候位組數與同時段歷史叫號速度推算 ETA。",
+    "falling back to minimum service rate with waiting groups": "資料不足，改用候位組數與保守服務速度推算 ETA。",
+    "wait is unavailable": "缺少預估等待時間資料，暫不提供 ETA。",
+    "no waiting groups right now": "目前顯示幾乎無需等待。",
+    "using recent queue progression": "依近 15 分鐘顯示號碼推進速度推算 ETA。",
+    "using historical average queue progression": "改用同時段歷史平均推進速度推算 ETA。",
+    "falling back to minimum service rate": "資料不足，改用保守服務速度推算 ETA。",
   };
 
   return exactMap[reason] || reason;
@@ -87,8 +94,8 @@ export function formatEtaReason(reason: string | null | undefined) {
 export function formatRecommendationReason(reason: string | null | undefined) {
   if (!reason) return "暫無推薦說明";
   return reason
-    .replace(/\bwait (\d+(?:\.\d+)?)\b/gi, "等候 $1 組")
-    .replace(/\bETA (\d+(?:\.\d+)?) min\b/gi, "預估 $1 分鐘")
+    .replace(/\bwait (\d+(?:\.\d+)?)\b/gi, "等待時間 $1 分鐘")
+    .replace(/\bETA (\d+(?:\.\d+)?) min\b/gi, "ETA $1 分鐘")
     .replace(/local ticketing on/gi, "可現場派籌")
     .replace(/fallback recommendation/gi, "以保守規則給出推薦")
     .replace(/,\s*/g, " ・ ");

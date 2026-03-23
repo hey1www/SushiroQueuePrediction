@@ -14,9 +14,9 @@
     </section>
 
     <section class="stats-row">
-      <StatPanel label="等候組數" :value="formatOptionalNumber(detail.store.wait)" />
+      <StatPanel label="預估等待時間" :value="formatOptionalNumber(detail.store.wait, ' 分鐘')" />
       <StatPanel label="候位組數" :value="formatOptionalNumber(detail.store.waiting_group)" />
-      <StatPanel label="預估等候" :value="formatEta(detail.store.eta)" :hint="formatEtaReason(detail.store.eta.reason)" />
+      <StatPanel label="本地 ETA" :value="formatEta(detail.store.eta)" :hint="formatEtaReason(detail.store.eta.reason)" />
       <StatPanel label="更新時間" :value="formatDateTime(detail.data_updated_at)" />
     </section>
 
@@ -58,17 +58,17 @@
 
     <section class="chart-grid" v-if="history">
       <TrendChart
-        eyebrow="等候走勢"
-        title="當天等候組數"
+        eyebrow="等待時間"
+        title="當天預估等待時間"
         :headline="detailWaitHeadline"
-        description="顯示當天 10:00 至 23:00 的等候組數走勢；數值越高，代表現場等待壓力越大。"
+        description="顯示當天 10:00 至 23:00 的預估等待時間走勢；單位為分鐘，數值越高代表等待更久。"
         :labels="historyTimeline"
         x-axis-type="time"
         :x-min="chartRange.start"
         :x-max="chartRange.end"
         :series="[
           {
-            name: '等候組數',
+            name: '預估等待時間',
             color: '#e85d3f',
             fill: true,
             values: waitHistoryValues,
@@ -79,7 +79,7 @@
         eyebrow="候位密度"
         title="當天候位組數"
         :headline="detailWaitingGroupHeadline"
-        description="顯示當天 10:00 至 23:00 的候位組數變化，可用來對照等候節奏。"
+        description="顯示當天 10:00 至 23:00 的候位組數變化，可用來對照現場排隊壓力。"
         :labels="historyTimeline"
         x-axis-type="time"
         :x-min="chartRange.start"
@@ -160,12 +160,12 @@
       </div>
       <div class="insight-columns">
         <div>
-          <p class="muted-text">今日平均等候</p>
-          <strong class="display-value">{{ formatOptionalNumber(analytics.today_average_wait, ' 組', 2) }}</strong>
+          <p class="muted-text">今日平均等待時間</p>
+          <strong class="display-value">{{ formatOptionalNumber(analytics.today_average_wait, ' 分鐘', 2) }}</strong>
         </div>
         <div>
           <p class="muted-text">目前時段歷史均值</p>
-          <strong class="display-value">{{ formatOptionalNumber(analytics.current_hour_historical_average_wait, ' 組', 2) }}</strong>
+          <strong class="display-value">{{ formatOptionalNumber(analytics.current_hour_historical_average_wait, ' 分鐘', 2) }}</strong>
         </div>
       </div>
       <div class="tag-groups">
@@ -173,7 +173,7 @@
           <p class="muted-text">今日高峰</p>
           <div class="tag-row">
             <span v-for="bucket in analytics.peak_hours" :key="bucket.hour" class="soft-tag">
-              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
+              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 分鐘', 1) }}
             </span>
           </div>
         </div>
@@ -181,7 +181,7 @@
           <p class="muted-text">建議時段</p>
           <div class="tag-row">
             <span v-for="bucket in analytics.recommended_hours" :key="bucket.hour" class="soft-tag soft-tag--good">
-              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
+              {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 分鐘', 1) }}
             </span>
           </div>
         </div>
@@ -291,7 +291,7 @@ const reservationQueueHistoryValues = computed(() =>
 
 const detailWaitHeadline = computed(() => {
   const latest = [...dayHistoryPoints.value].reverse().find((point) => point.wait !== null)?.wait;
-  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 組")}`;
+  return latest === undefined || latest === null ? "暫無資料" : `最新 ${formatOptionalNumber(latest, " 分鐘")}`;
 });
 
 const detailWaitingGroupHeadline = computed(() => {

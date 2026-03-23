@@ -5,7 +5,7 @@
         <p class="eyebrow">擁擠分析</p>
         <h2>擁擠分析與快速推薦</h2>
         <p class="hero-text">
-          以同一門店的歷史時段資料作為基底，先看等候密度，再看號碼推進速度，方便快速比較午市與晚市壓力。
+          以同一門店的歷史時段資料作為基底，先看預估等待時間，再看號碼推進速度，方便快速比較午市與晚市壓力。
         </p>
       </div>
     </section>
@@ -23,12 +23,12 @@
     </section>
 
     <section class="stats-row" v-if="analytics">
-      <StatPanel label="今日平均等候" :value="formatOptionalNumber(analytics.today_average_wait, ' 組', 2)" />
-      <StatPanel label="平日平均" :value="formatOptionalNumber(analytics.weekday_average_wait, ' 組', 2)" />
-      <StatPanel label="週末平均" :value="formatOptionalNumber(analytics.weekend_average_wait, ' 組', 2)" />
+      <StatPanel label="今日平均等待時間" :value="formatOptionalNumber(analytics.today_average_wait, ' 分鐘', 2)" />
+      <StatPanel label="平日平均" :value="formatOptionalNumber(analytics.weekday_average_wait, ' 分鐘', 2)" />
+      <StatPanel label="週末平均" :value="formatOptionalNumber(analytics.weekend_average_wait, ' 分鐘', 2)" />
       <StatPanel
         label="目前時段歷史均值"
-        :value="formatOptionalNumber(analytics.current_hour_historical_average_wait, ' 組', 2)"
+        :value="formatOptionalNumber(analytics.current_hour_historical_average_wait, ' 分鐘', 2)"
       />
     </section>
 
@@ -36,10 +36,10 @@
 
     <section class="chart-grid" v-if="analytics">
       <TrendChart
-        eyebrow="等候趨勢"
-        title="按小時平均等候組數"
+        eyebrow="等待時間"
+        title="按小時平均預估等待時間"
         :headline="waitChartHeadline"
-        description="近 28 日同一時段的平均等候組數，可直接看出午市與晚市高峰。"
+        description="近 28 日同一時段的平均預估等待時間，單位為分鐘，可直接看出午市與晚市高峰。"
         :labels="hourLabels"
         :series="waitChartSeries"
       />
@@ -64,7 +64,7 @@
         <p class="panel-intro">以今日已收集到的資料為主，優先標出目前最擁擠的幾個時段。</p>
         <div class="tag-row">
           <span v-for="bucket in analytics.peak_hours" :key="bucket.hour" class="soft-tag">
-            {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
+            {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 分鐘', 1) }}
           </span>
         </div>
       </section>
@@ -76,10 +76,10 @@
             <h3>較佳造訪時段</h3>
           </div>
         </div>
-        <p class="panel-intro">從近 28 日歷史均值挑出等候壓力較低的時段，適合先作參考。</p>
+        <p class="panel-intro">從近 28 日歷史均值挑出等待時間較低的時段，適合先作參考。</p>
         <div class="tag-row">
           <span v-for="bucket in analytics.recommended_hours" :key="bucket.hour" class="soft-tag soft-tag--good">
-            {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 組', 1) }}
+            {{ bucket.label }} ・ {{ formatOptionalNumber(bucket.average_wait, ' 分鐘', 1) }}
           </span>
         </div>
       </section>
@@ -100,8 +100,8 @@
               <small>{{ formatRegionArea(store.region, store.area) }}</small>
             </div>
             <div class="table-row__metrics">
-              <span>等候 {{ formatOptionalNumber(store.wait) }} 組</span>
-              <span>預估 {{ store.eta.estimated_wait_minutes ?? "--" }} 分鐘</span>
+              <span>等待時間 {{ formatOptionalNumber(store.wait, ' 分鐘') }}</span>
+              <span>ETA {{ store.eta.estimated_wait_minutes ?? "--" }} 分鐘</span>
             </div>
           </div>
         </div>
@@ -125,8 +125,8 @@
               <small>{{ formatRecommendationReason(recommendation.reason) }}</small>
             </div>
             <div class="table-row__metrics">
-              <span>等候 {{ formatOptionalNumber(recommendation.wait) }} 組</span>
-              <span>預估 {{ formatOptionalNumber(recommendation.eta_minutes, ' 分鐘') }}</span>
+              <span>等待時間 {{ formatOptionalNumber(recommendation.wait, ' 分鐘') }}</span>
+              <span>ETA {{ formatOptionalNumber(recommendation.eta_minutes, ' 分鐘') }}</span>
               <span>分數 {{ formatOptionalNumber(recommendation.score, '', 3) }}</span>
             </div>
           </div>
@@ -159,7 +159,7 @@ const hourLabels = computed(() => analytics.value?.hourly_average_wait.map((buck
 
 const waitChartSeries = computed(() => [
   {
-    name: "平均等候",
+    name: "平均等待時間",
     color: "#e85d3f",
     fill: true,
     values: analytics.value?.hourly_average_wait.map((bucket) => bucket.average_wait) || [],
@@ -179,7 +179,7 @@ const waitChartHeadline = computed(() => {
   const buckets = analytics.value?.hourly_average_wait.filter((bucket) => bucket.average_wait !== null) || [];
   if (!buckets.length) return "暫無足夠資料";
   const highest = [...buckets].sort((left, right) => (right.average_wait || 0) - (left.average_wait || 0))[0];
-  return `${highest.label} 最高 ${formatOptionalNumber(highest.average_wait, " 組", 1)}`;
+  return `${highest.label} 最長 ${formatOptionalNumber(highest.average_wait, " 分鐘", 1)}`;
 });
 
 const progressChartHeadline = computed(() => {
