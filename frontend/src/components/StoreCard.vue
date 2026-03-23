@@ -13,20 +13,12 @@
 
     <div class="metric-grid">
       <div>
-        <p>預估等待時間</p>
-        <strong>{{ formatOptionalNumber(store.wait, ' 分鐘') }}</strong>
+        <p>預估等待時間（系統，算法）</p>
+        <strong>{{ combinedWaitMinutes }}</strong>
       </div>
       <div>
         <p>候位組數</p>
-        <strong>{{ formatOptionalNumber(store.waiting_group) }}</strong>
-      </div>
-      <div>
-        <p>顯示號碼數</p>
-        <strong>{{ formatOptionalNumber(onsiteQueueCount) }}</strong>
-      </div>
-      <div>
-        <p>本地 ETA</p>
-        <strong>{{ formatEta(store.eta) }}</strong>
+        <strong>{{ formatOptionalNumber(store.waiting_group, ' 桌') }}</strong>
       </div>
     </div>
 
@@ -54,7 +46,6 @@ import { RouterLink } from "vue-router";
 import type { StoreCurrent } from "../types/api";
 import {
   formatDateTime,
-  formatEta,
   formatEtaReason,
   formatLocalTicketingStatus,
   formatOptionalNumber,
@@ -71,5 +62,11 @@ const props = defineProps<{
 const RESERVATION_QUEUE_THRESHOLD = 8000;
 
 const onsiteQueue = computed(() => props.store.queue.store_queue.filter((number) => number < RESERVATION_QUEUE_THRESHOLD));
-const onsiteQueueCount = computed(() => onsiteQueue.value.length);
+const combinedWaitMinutes = computed(
+  () =>
+    `${formatOptionalNumber(props.store.wait, " 分鐘")}，${formatOptionalNumber(
+      props.store.eta.estimated_wait_minutes,
+      " 分鐘",
+    )}`,
+);
 </script>
